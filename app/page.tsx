@@ -1016,6 +1016,16 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+            <div className="mt-8 flex flex-col gap-3 border-t border-primary/10 pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <img src="https://sequence-flow.canadian-ai.app/icon-black.svg" alt="Canadian AI" width={22} height={22} className="size-5 dark:invert" />
+                <div className="flex flex-col">
+                  <span>Open source from Canadian AI.</span>
+                  <span className="text-xs opacity-80">Built in Montréal by Canadian AI.</span>
+                </div>
+              </div>
+              <a href="https://canadian-ai.ca" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Canadian AI</a>
+            </div>
           </div>
         </footer>
       </div>
