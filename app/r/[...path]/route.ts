@@ -1,31 +1,31 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { readFileSync, existsSync } from "fs"
-import { join } from "path"
+import { readFile } from "node:fs/promises"
+import { resolve, relative, isAbsolute, sep } from "node:path"
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+const ROOT = resolve(process.cwd(), "public", "registry")
+
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params
-  const filePath = path.join("/")
+  if (!Array.isArray(path) || path.length === 0 ||
+    path.some((part) => !part || part === "." || part === ".." || part.includes("/") || part.includes("\\") || part.includes("\0"))) {
+    return NextResponse.json({ error: "Invalid registry path" }, { status: 400 })
+  }
 
-  // Construct the registry file path
-  const registryPath = join(process.cwd(), "public", "registry", filePath)
-
-  // Check if file exists
-  if (!existsSync(registryPath)) {
-    return NextResponse.json({ error: "Component not found", path: filePath }, { status: 404 })
+  const candidate = resolve(ROOT, ...path)
+  const rel = relative(ROOT, candidate)
+  if (!rel || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel) || !candidate.endsWith(".json")) {
+    return NextResponse.json({ error: "Invalid registry path" }, { status: 400 })
   }
 
   try {
-    const content = readFileSync(registryPath, "utf-8")
-    const json = JSON.parse(content)
-
-    return NextResponse.json(json, {
+    const content = await readFile(candidate, "utf-8")
+    return NextResponse.json(JSON.parse(content), {
       headers: {
-        "Content-Type": "application/json",
         "Cache-Control": "public, max-age=3600, s-maxage=86400",
         "Access-Control-Allow-Origin": "*",
       },
     })
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to read registry file" }, { status: 500 })
+  } catch {
+    return NextResponse.json({ error: "Component not found" }, { status: 404 })
   }
 }
