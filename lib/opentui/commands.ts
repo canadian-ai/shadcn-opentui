@@ -1,4 +1,5 @@
 import type { TerminalCommand } from "./types"
+import { filterTerminalChoices } from "./terminal-picker"
 import { renderAsciiBanner, renderTable, sampleTerminalTableData } from "./renderers"
 
 // Built-in system commands
@@ -115,6 +116,43 @@ export const createBuiltInCommands = (): TerminalCommand[] => [
 
 // UI-related commands
 export const createUICommands = (): TerminalCommand[] => [
+  {
+    name: "palette",
+    description: "Search and select commands using the terminal-native UI picker",
+    category: "ui",
+    usage: "palette [search terms]",
+    handler: (args, context) => {
+      const choices = Array.from(
+        new Map(context.getCommands().map((command) => [command.name, command])).values(),
+      ).filter((command) => command.name !== "palette").map((command) => ({
+        id: command.name,
+        label: command.name,
+        description: command.description,
+        keywords: [command.category ?? "custom", ...(command.aliases ?? [])],
+      }))
+      const matches = filterTerminalChoices(choices, args.join(" "))
+      if (matches.length === 0) {
+        context.addLine("No matching commands", "system")
+        return
+      }
+      context.showUI({
+        id: "command-palette",
+        type: "menu",
+        props: { items: matches.map((item) => item.label), descriptions: matches.map((item) => item.description), query: args.join(" ") },
+        active: true,
+        onComplete: (result) => {
+          const selection = result as { index?: number; item?: string }
+          const selected = typeof selection.index === "number" ? matches[selection.index] : matches.find((item) => item.label === selection.item)
+          if (!selected) return
+          // Surface the command, do not automatically execute arbitrary actions.
+          context.hideUI("command-palette")
+          context.addLine("Selected command: " + selected.id, "success")
+          context.addLine("Run '" + selected.id + "' to execute it.")
+        },
+      })
+      context.addLine("Use ↑↓ to navigate, ENTER to select, ESC to cancel")
+    },
+  },
   {
     name: "menu",
     description: "Create an interactive menu",
