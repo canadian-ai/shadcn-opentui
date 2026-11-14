@@ -39,3 +39,17 @@ export {
   createBuiltInCommands,
   createUICommands,
 } from "./commands"
+
+// Headless terminal interaction parity with the Canadian AI UI SDK pilots
+export {
+  createTerminalPickerState,
+  reduceTerminalPicker,
+  filterTerminalChoices,
+  dispatchTerminalPickerKey,
+} from "./terminal-picker"
+export type {
+  TerminalChoice,
+  TerminalPickerState,
+  TerminalPickerAction,
+  TerminalPickerKey,
+} from "./terminal-picker"
